@@ -135,6 +135,6 @@ h6 {
     background-color: rgb(211, 211, 211);
 }
 
-.operator, .decimal, .clear {
+.operator, .decimal, .clear, .equals {
     background-color: rgb(230, 230, 230);
 }
