@@ -1,11 +1,8 @@
-
 const display = document.querySelector('.display');
 const equation = document.querySelector('.eqndisplay');
 
-const operators = ['+', '-', 'x', '/'];
-
 const operation = {
-    input1: '0',
+    input1: null,
     input2: null,
     operator: null,
 };
@@ -42,14 +39,20 @@ function displayNumbers() {
         btn.addEventListener('click', (e) => {
             const btnPressed = e.target.textContent
  
-            if (operation.operator === null) {
-                display.textContent = operation.input1 === '0' ? btnPressed : display.textContent + btnPressed;
+            if (operation.input1 === null) {
+                display.textContent = btnPressed;
                 operation.input1 = display.textContent;
+                equation.textContent = operation.input1;
             }         
+            else if (operation.operator === null ) {
+                display.textContent += btnPressed;
+                operation.input1 = display.textContent;
+                equation.textContent += btnPressed;
+            }
             else {
                 display.textContent = operation.input2 === null ? btnPressed : display.textContent + btnPressed;
-                equation.textContent += e.target.textContent;
-                operation.input2 = display.textContent;   
+                operation.input2 = display.textContent;
+                equation.textContent += btnPressed   
             }  
         }); 
     }); 
@@ -57,17 +60,13 @@ function displayNumbers() {
 
 function opButtons() {
     const opButtons = document.querySelectorAll('.operator');
-
     opButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
-  
-//If second input is set, operator must be too
-//Perform operation and display result before setting new operator
             if (operation.input2 !== null) {
-                display.textContent = operate(Number(operation.input1), Number(operation.input2), operation.operator);
-                operation.input1 = display.textContent;
+                display.textContent = operate(Number(operation.input1), Number(operation.input2), operation.operator);    
                 operation.input2 = null;
             }
+            operation.input1 = display.textContent;
             operation.operator = e.target.textContent;
             equation.textContent = operation.input1 + operation.operator;
         });
@@ -85,14 +84,21 @@ function clearDisplay() {
     });
 }
 
-
-
 function equals() {
     const equals = document.querySelector('.equals');
     equals.addEventListener('click', (e) => {
-        equation.textContent = operation.input1 + operation.operator + operation.input2 + e.target.textContent;
-        display.textContent = operate(Number(operation.input1), Number(operation.input2), operation.operator);    
-        operation.input1 = display.textContent;
+        if (operation.operator === null) {
+            equation.textContent = operation.input1 + e.target.textContent
+        }
+        else if (operation.input2 === null) {
+            equation.textContent = operation.input1 + operation.operator + operation.input1 + e.target.textContent;
+            display.textContent = operate(Number(operation.input1), Number(operation.input1), operation.operator);
+        }
+        else {
+            equation.textContent = operation.input1 + operation.operator + operation.input2 + e.target.textContent;
+            display.textContent = operate(Number(operation.input1), Number(operation.input2), operation.operator);
+        }
+        operation.input1 = null;
         operation.input2 = null;
         operation.operator = null;
     })
