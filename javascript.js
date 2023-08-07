@@ -1,9 +1,16 @@
-let input1, input2, operator, displayValue;
+let displayValue;
 let btnPressed, prevPressed;
+
 const display = document.querySelector('.display');
+const equation = document.querySelector('.eqndisplay');
 
 const operators = ['+', '-', 'x', '/'];
-//Store operands and operator as object - key:value pair
+
+const operation = {
+    input1: null,
+    input2: null,
+    operator: null,
+};
 
 function add(num1, num2) {
     return num1 + num2;
@@ -31,27 +38,21 @@ function operate(num1, num2, op) {
 }
 
 function displayNumbers() {
-    const buttons = document.querySelectorAll('.digit, .operator');
+    const buttons = document.querySelectorAll('.digit');
     
     buttons.forEach(btn => {
         btn.addEventListener('click', (e) => {
             btnPressed = e.target.textContent
-//TODO: Override display if the last key pressed was '='
 
-
-//If the display is neutral (0) and the first button pressed is not an operator
-//Update the display with the value of the button pressed
-            if (display.textContent === '0' && operators.includes(btnPressed) === false) {
-                display.textContent = e.target.textContent;
+            if (display.textContent === '0' || operation.operator !== null) {
+                display.textContent = e.target.textContent;  
             }
 
 //If the display is populated, add the input to the display
 //But will not allow user to enter two operators in a row
             else if ((operators.includes(prevPressed) && operators.includes(btnPressed)) === false) {
+                equation.textContent += e.target.textContent; 
                 display.textContent += e.target.textContent;
-                if (operators.includes(btnPressed)) {
-                    operator = btnPressed
-                }
             }
             displayValue = display.textContent;
             prevPressed = btnPressed    
@@ -59,14 +60,41 @@ function displayNumbers() {
     }); 
 }
 
+function opButtons() {
+    const opButtons = document.querySelectorAll('.operator');
+    opButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            btnPressed = e.target.textContent;
+            if ((operators.includes(prevPressed) && operators.includes(btnPressed)) === false) {
+                if (operation.input1 === null) {
+                    operation.input1 = displayValue;
+                    operation.operator = btnPressed;
+                    equation.textContent += e.target.textContent;
+                }
+                else {
+                    operation.input2 = displayValue;
+                    display.textContent = operate(Number(operation.input1), Number(operation.input2), operation.operator);
+                    displayValue = display.textContent;
+                    operation.input1 = displayValue;
+                }
+            }
+            prevPressed = btnPressed
+        });
+    });
+}
+
 function clearDisplay() {
     const clear = document.querySelector('.clear')
     clear.addEventListener('click', (e) => {
         display.textContent = '0';
+        equation.textContent = '';
         displayValue = display.textContent;
         btnPressed = '';
         prevPressed = '';
-    })
+        operation.input1 = null;
+        operation.input2 = null;
+        operation.operator = null;
+    });
 }
 
 
@@ -74,11 +102,10 @@ function clearDisplay() {
 function equals() {
     const equals = document.querySelector('.equals');
     equals.addEventListener('click', (e) => {
-        if (!operators.includes(prevPressed) && displayValue.search(/[+\-x\/]/) != -1) {
-            const numarray = displayValue.split(/[+\-x\/]/);
-            display.textContent = operate(Number(numarray[0]), Number(numarray[1]), operator);
+//TODO fix to use object and set operator and input 2 to null - similar to opButtons()
+            display.textContent = operate(Number(operation.input1), Number(operation.input2), operation.operator);
             displayValue = display.textContent;
-        }
+            input1 = displayValue;
     })
 }
 
