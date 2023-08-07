@@ -27,7 +27,7 @@ function operate(num1, num2, op) {
     switch (op) {
         case '+': return add(num1, num2);
         case '-': return subtract(num1, num2);
-        case 'x': return multiply(num1, num2);
+        case '*': return multiply(num1, num2);
         case '/': return divide(num1, num2);
     }
 }
@@ -39,7 +39,7 @@ function displayNumbers() {
         btn.addEventListener('click', (e) => {
             const btnPressed = e.target.textContent
  
-            if (operation.input1 === null) {
+            if (operation.input1 === null && !display.textContent.includes('.')) {
                 display.textContent = btnPressed;
                 operation.input1 = display.textContent;
                 equation.textContent = operation.input1;
@@ -49,13 +49,29 @@ function displayNumbers() {
                 operation.input1 = display.textContent;
                 equation.textContent += btnPressed;
             }
+            else if (operation.input2 === null && operation.operator === '/' && btnPressed === '0') {
+                display.textContent = "NOPE"
+                equation.textContent = "Try again later."
+                operation.input1 = null;
+                operation.input2 = null;
+                operation.operator = null;
+            }
             else {
                 display.textContent = operation.input2 === null ? btnPressed : display.textContent + btnPressed;
                 operation.input2 = display.textContent;
-                equation.textContent += btnPressed   
-            }  
+                equation.textContent += btnPressed
+            }
         }); 
     }); 
+}
+
+function decimalButton() {
+    const decbtn = document.querySelector('.decimal');
+    decbtn.addEventListener('click', (e) => {
+        if (!display.textContent.includes('.')) {
+            display.textContent += e.target.textContent;
+        }
+    });
 }
 
 function opButtons() {
@@ -88,7 +104,8 @@ function equals() {
     const equals = document.querySelector('.equals');
     equals.addEventListener('click', (e) => {
         if (operation.operator === null) {
-            equation.textContent = operation.input1 + e.target.textContent
+            operation.input1 = display.textContent;
+            equation.textContent = operation.input1 + e.target.textContent;
         }
         else if (operation.input2 === null) {
             equation.textContent = operation.input1 + operation.operator + operation.input1 + e.target.textContent;
@@ -101,10 +118,11 @@ function equals() {
         operation.input1 = null;
         operation.input2 = null;
         operation.operator = null;
-    })
+    });
 }
 
 displayNumbers()
+decimalButton()
 opButtons()
 clearDisplay()
 equals()
