@@ -1,5 +1,3 @@
-let displayValue;
-let btnPressed, prevPressed;
 
 const display = document.querySelector('.display');
 const equation = document.querySelector('.eqndisplay');
@@ -7,7 +5,7 @@ const equation = document.querySelector('.eqndisplay');
 const operators = ['+', '-', 'x', '/'];
 
 const operation = {
-    input1: null,
+    input1: '0',
     input2: null,
     operator: null,
 };
@@ -42,43 +40,36 @@ function displayNumbers() {
     
     buttons.forEach(btn => {
         btn.addEventListener('click', (e) => {
-            btnPressed = e.target.textContent
-
-            if (display.textContent === '0' || operation.operator !== null) {
-                display.textContent = e.target.textContent;  
-            }
-
-//If the display is populated, add the input to the display
-//But will not allow user to enter two operators in a row
-            else if ((operators.includes(prevPressed) && operators.includes(btnPressed)) === false) {
-                equation.textContent += e.target.textContent; 
-                display.textContent += e.target.textContent;
-            }
-            displayValue = display.textContent;
-            prevPressed = btnPressed    
+            const btnPressed = e.target.textContent
+ 
+            if (operation.operator === null) {
+                display.textContent = operation.input1 === '0' ? btnPressed : display.textContent + btnPressed;
+                operation.input1 = display.textContent;
+            }         
+            else {
+                display.textContent = operation.input2 === null ? btnPressed : display.textContent + btnPressed;
+                equation.textContent += e.target.textContent;
+                operation.input2 = display.textContent;   
+            }  
         }); 
     }); 
 }
 
 function opButtons() {
     const opButtons = document.querySelectorAll('.operator');
+
     opButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
-            btnPressed = e.target.textContent;
-            if ((operators.includes(prevPressed) && operators.includes(btnPressed)) === false) {
-                if (operation.input1 === null) {
-                    operation.input1 = displayValue;
-                    operation.operator = btnPressed;
-                    equation.textContent += e.target.textContent;
-                }
-                else {
-                    operation.input2 = displayValue;
-                    display.textContent = operate(Number(operation.input1), Number(operation.input2), operation.operator);
-                    displayValue = display.textContent;
-                    operation.input1 = displayValue;
-                }
+  
+//If second input is set, operator must be too
+//Perform operation and display result before setting new operator
+            if (operation.input2 !== null) {
+                display.textContent = operate(Number(operation.input1), Number(operation.input2), operation.operator);
+                operation.input1 = display.textContent;
+                operation.input2 = null;
             }
-            prevPressed = btnPressed
+            operation.operator = e.target.textContent;
+            equation.textContent = operation.input1 + operation.operator;
         });
     });
 }
@@ -88,9 +79,6 @@ function clearDisplay() {
     clear.addEventListener('click', (e) => {
         display.textContent = '0';
         equation.textContent = '';
-        displayValue = display.textContent;
-        btnPressed = '';
-        prevPressed = '';
         operation.input1 = null;
         operation.input2 = null;
         operation.operator = null;
@@ -102,13 +90,15 @@ function clearDisplay() {
 function equals() {
     const equals = document.querySelector('.equals');
     equals.addEventListener('click', (e) => {
-//TODO fix to use object and set operator and input 2 to null - similar to opButtons()
-            display.textContent = operate(Number(operation.input1), Number(operation.input2), operation.operator);
-            displayValue = display.textContent;
-            input1 = displayValue;
+        equation.textContent = operation.input1 + operation.operator + operation.input2 + e.target.textContent;
+        display.textContent = operate(Number(operation.input1), Number(operation.input2), operation.operator);    
+        operation.input1 = display.textContent;
+        operation.input2 = null;
+        operation.operator = null;
     })
 }
 
 displayNumbers()
+opButtons()
 clearDisplay()
 equals()
