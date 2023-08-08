@@ -16,7 +16,10 @@ function subtract(num1, num2) {
 }
 
 function multiply(num1, num2) {
-    return num1 * num2;
+    let rounded = Math.round((num1 / num2) * 1000000000) / 1000000000
+    rounded = "" + rounded;
+    rounded = rounded.replace(/[.]0+$/g, '')
+    return rounded;
 }
 
 function divide(num1, num2) {
@@ -26,9 +29,13 @@ function divide(num1, num2) {
         operation.input1 = null;
         operation.input2 = null;
         operation.operator = null;
-        return errormsg
+        return errormsg;
     }
-    return num1 / num2
+
+    let rounded = Math.round((num1 / num2) * 1000000000) / 1000000000
+    rounded = "" + rounded;
+    rounded = rounded.replace(/[.]0+$/g, '')
+    return rounded;
 }
 
 function operate(num1, num2, op) {
@@ -47,7 +54,6 @@ function displayNumbers() {
         btn.addEventListener('click', (e) => {
             const btnPressed = e.target.textContent
  
-//TODO: Fix so you a decimal does not prevent display override after pressing equals
             if (operation.input1 === null) {
                 if (display.textContent.endsWith('0.')) {
                     display.textContent += btnPressed;
