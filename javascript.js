@@ -20,6 +20,14 @@ function multiply(num1, num2) {
 }
 
 function divide(num1, num2) {
+    if (num2 == 0) {
+        const errormsg = "NOPE"
+        equation.textContent = "Try again later."
+        operation.input1 = null;
+        operation.input2 = null;
+        operation.operator = null;
+        return errormsg
+    }
     return num1 / num2
 }
 
@@ -39,22 +47,21 @@ function displayNumbers() {
         btn.addEventListener('click', (e) => {
             const btnPressed = e.target.textContent
  
-            if (operation.input1 === null && !display.textContent.includes('.')) {
-                display.textContent = btnPressed;
+//TODO: Fix so you a decimal does not prevent display override after pressing equals
+            if (operation.input1 === null) {
+                if (display.textContent.endsWith('0.')) {
+                    display.textContent += btnPressed;
+                }
+                else {
+                    display.textContent = btnPressed;
+                }
                 operation.input1 = display.textContent;
                 equation.textContent = operation.input1;
             }         
-            else if (operation.operator === null ) {
+            else if (operation.operator === null) {
                 display.textContent += btnPressed;
                 operation.input1 = display.textContent;
                 equation.textContent += btnPressed;
-            }
-            else if (operation.input2 === null && operation.operator === '/' && btnPressed === '0') {
-                display.textContent = "NOPE"
-                equation.textContent = "Try again later."
-                operation.input1 = null;
-                operation.input2 = null;
-                operation.operator = null;
             }
             else {
                 display.textContent = operation.input2 === null ? btnPressed : display.textContent + btnPressed;
@@ -68,8 +75,12 @@ function displayNumbers() {
 function decimalButton() {
     const decbtn = document.querySelector('.decimal');
     decbtn.addEventListener('click', (e) => {
-        if (!display.textContent.includes('.')) {
-            display.textContent += e.target.textContent;
+        if (!display.textContent.includes('.') && (operation.input1 || display.textContent === '0')) {
+            if (operation.input1 && operation.operator && !operation.input2) {}
+            else {
+                display.textContent += e.target.textContent;
+                equation.textContent += e.target.textContent;
+            }    
         }
     });
 }
@@ -104,6 +115,7 @@ function equals() {
     const equals = document.querySelector('.equals');
     equals.addEventListener('click', (e) => {
         if (operation.operator === null) {
+            display.textContent = display.textContent.replace(/[.]$|[.]0+$/g, '');
             operation.input1 = display.textContent;
             equation.textContent = operation.input1 + e.target.textContent;
         }
