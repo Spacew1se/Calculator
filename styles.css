@@ -116,12 +116,15 @@ h6 {
 
 .clearrow {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-evenly;
     flex-grow: 1;
+    gap: 2px;
 }
 
-.clear {
-    min-width: 50%;
+
+.clear, .backspace {
+    flex-basis: 50%;
+    gap: 3px;
 }
 
 .btnrow > button {
@@ -141,6 +144,6 @@ h6 {
     background-color: rgb(211, 211, 211);
 }
 
-.operator, .decimal, .clear, .equals {
+.operator, .decimal, .clear, .equals, .backspace {
     background-color: rgb(230, 230, 230);
 }
