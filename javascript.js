@@ -5,7 +5,15 @@ const operation = {
     input1: null,
     input2: null,
     operator: null,
+    result: null,
 };
+
+const previous = {
+    input1: null,
+    input2: null,
+    operator: null,
+    result: null,
+}
 
 function add(num1, num2) {
     return num1 + num2;
@@ -57,7 +65,8 @@ function displayNumbers() {
                     if (btnPressed !== '0') {
                         display.textContent = btnPressed;
                         operation.input1 = display.textContent;
-                    } 
+                    }
+                    equation.textContent = '';
                 }         
                 else if (!operation.operator) {
                     display.textContent += btnPressed;
@@ -102,7 +111,8 @@ function opButtons() {
     opButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
             if (operation.input2) {
-                display.textContent = operate(Number(operation.input1), Number(operation.input2), operation.operator);    
+                operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
+                display.textContent = operation.result;   
                 operation.input2 = null;
             }
             if (operation.input1) {
@@ -120,9 +130,7 @@ function clearDisplay() {
     clear.addEventListener('click', (e) => {
         display.textContent = '0';
         equation.textContent = '';
-        operation.input1 = null;
-        operation.input2 = null;
-        operation.operator = null;
+        clearOperation();
     });
 }
 
@@ -130,28 +138,34 @@ function equals() {
     const equals = document.querySelector('.equals');
     equals.addEventListener('click', (e) => {
         if (!operation.operator) {
-            display.textContent = display.textContent.replace(/(^-?\d+\.\d*[1-9])(0+$)|(\.0+$)|(\.$)/g, "$1");
+            if (!operation.result) {
+                display.textContent = display.textContent.replace(/(^-?\d+\.\d*[1-9])(0+$)|(\.0+$)|(\.$)/g, "$1");
+                equation.textContent = operation.input1 + e.target.textContent;
+            }
+            else {
+
+            }
             operation.input1 = display.textContent;
-            equation.textContent = operation.input1 + e.target.textContent;
+            
         }
         else if (!operation.input2) {
             console.log(operation)
             equation.textContent = operation.input1 + operation.operator + operation.input1 + e.target.textContent;
-            display.textContent = operate(Number(operation.input1), Number(operation.input1), operation.operator);
+            operation.result = operate(Number(operation.input1), Number(operation.input1), operation.operator);
+            display.textContent = operation.result;
         }
         else {
             console.log(operation)
             operation.input2 = operation.input2.replace(/(^-?\d+\.\d*[1-9])(0+$)|(\.0+$)/g, "$1");
             equation.textContent = operation.input1 + operation.operator + operation.input2 + e.target.textContent;
-            display.textContent = operate(Number(operation.input1), Number(operation.input2), operation.operator);
+            operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
+            display.textContent = operation.result;
         }
-        operation.input1 = null;
-        operation.input2 = null;
-        operation.operator = null;
+        saveHistory(operation);
+        console.log(previous);
     });
 }
 
-//Fix backspace to properly use prevoperator
 function backspace() {
     const del = document.querySelector('.backspace');
     del.addEventListener('click', (e) => {
@@ -160,6 +174,22 @@ function backspace() {
         }
     })
 }
+
+function clearOperation(op) {
+    operation.input1 = null;
+    operation.input2 = null;
+    operation.operator = null;
+    operation.result = null;
+}
+
+function saveHistory(op) {
+    previous.input1 = op.input1;
+    previous.input2 = op.input2;
+    previous.operator = op.operator;
+    previous.result = op.result;
+    clearOperation()
+}
+
 
 backspace()
 displayNumbers()
