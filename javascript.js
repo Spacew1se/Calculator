@@ -26,7 +26,7 @@ function subtract(num1, num2) {
 }
 
 function multiply(num1, num2) {
-    let rounded = Math.round((num1 * num2) * 1000000) / 1000000;
+    let rounded = Math.round((num1 * num2) * 100000000) / 10000000;
     rounded = "" + rounded;
     rounded = rounded.replace(/[.]0+$/g, '')
     return rounded;
@@ -42,8 +42,7 @@ function divide(num1, num2) {
         errState = true;
         return errormsg;
     }
-
-    let rounded = Math.round((num1 / num2) * 1000000) / 1000000;
+    let rounded = Math.round((num1 / num2) * 10000000000) / 10000000000;
     rounded = "" + rounded;
     rounded = rounded.replace(/[.]0+$/g, '')
     return rounded;
@@ -67,23 +66,25 @@ function displayNumbers() {
             if (errState) {
                 resetError();
             }
-            if (!operation.input1 || (operation.input1 === '0' && display.textContent === '0' && previous.result !== '0')) {
-                display.textContent = btnPressed;
-                operation.input1 = display.textContent; 
-                equation.textContent = '';
-            }        
-            else if (!operation.operator) {
-                display.textContent += btnPressed;
-                operation.input1 = display.textContent;                 
-            }
-            else if (!operation.input2 || (operation.input2 === '0' && display.textContent === '0')) {
-                display.textContent = btnPressed;
-                operation.input2 = display.textContent;
-            }
-            else {
-                display.textContent += btnPressed;
-                operation.input2 = display.textContent;
-            }
+            if (!displayTooLong()) {
+                if (!operation.input1 || (operation.input1 === '0' && display.textContent === '0' && previous.result !== '0')) {
+                    display.textContent = btnPressed;
+                    operation.input1 = display.textContent;
+                    equation.textContent = '';
+                }
+                else if (!operation.operator) {
+                    display.textContent += btnPressed;
+                    operation.input1 = display.textContent;
+                }
+                else if (!operation.input2 || (operation.input2 === '0' && display.textContent === '0')) {
+                    display.textContent = btnPressed;
+                    operation.input2 = display.textContent;
+                }
+                else {
+                    display.textContent += btnPressed;
+                    operation.input2 = display.textContent;
+                }
+            } 
             console.log("pressing digits", operation)
         }); 
     }); 
@@ -128,7 +129,9 @@ function opButtons() {
                     operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
                     display.textContent = operation.result;
                     operation.input2 = null;
+                    
                 }
+                checkDisplayLength();
                 operation.input1 = display.textContent;
                 operation.operator = e.target.textContent;
                 equation.textContent = operation.input1 + operation.operator;
@@ -187,9 +190,9 @@ function equals() {
             operation.input2 = operation.input2.replace(/(^-?\d+\.\d*[1-9])(0+$)|(\.0+$)/g, "$1");
             equation.textContent = operation.input1 + operation.operator + operation.input2 + e.target.textContent;
             operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
-            display.textContent = operation.result;
-            
+            display.textContent = operation.result;    
         }
+        checkDisplayLength()
         console.log("post=", operation)
         saveHistory(operation);
         console.log("postSave", operation)
@@ -245,7 +248,7 @@ function clearPreviousOperation() {
 
 function saveHistory(op) {
     previous.input1 = op.input1;
-    previous.input2 = op.input2;
+    previous.input2 = op.input2;screenX
     previous.operator = op.operator;
     previous.result = errState === true ? null : op.result;
     clearOperation()
@@ -255,6 +258,23 @@ function resetError() {
         clearDisplay();
         clearPreviousOperation();
         errState = false;
+}
+
+function displayTooLong() {
+    const displayContainer = document.querySelector('.displaycontainer');
+    return display.offsetWidth >= displayContainer.offsetWidth 
+}
+
+//fix rounding// exponentiation
+function checkDisplayLength() {
+    if(displayTooLong()) {
+        display.textContent = Number.parseFloat(display.textContent).toExponential(10);
+    }
+    else {
+        let rounded = Math.round((display.textContent) * 100000000) / 100000000;
+        rounded = "" + rounded;
+        rounded = rounded.replace(/[.]0+$/g, '')
+    }
 }
 
 backspace()
