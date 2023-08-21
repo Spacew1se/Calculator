@@ -145,10 +145,31 @@ function opButtons() {
     });
 }
 
+function clearEntryButton() {
+    const ce = document.querySelector('.clearEntry');
+    ce.addEventListener('click', (e) => {
+        if (operation.input1 && !operation.operator && !operation.input2) {
+            clearDisplay()
+        }
+        else if (previous.result && !operation.input1) {
+            clearDisplay()
+            operation.input1 = '0'
+            operation.input2 = previous.input2;
+            operation.operator = previous.operator;
+        }
+        else if ((operation.input1 && operation.operator && !operation.input2) || operation.input2) {
+            operation.input2 = '0';
+            display.textContent = operation.input2
+        }
+        console.dir(operation);
+    })
+}
+
 function clearButton() {
     const clear = document.querySelector('.clear')
     clear.addEventListener('click', (e) => {
         clearDisplay();
+        clearPreviousOperation();
     });
 }
 
@@ -156,7 +177,9 @@ function equals() {
     const equals = document.querySelector('.equals');
     equals.addEventListener('click', (e) => {
       
-        if (!operation.input1 && !previous.input1) {
+        console.log('preeq', operation)
+        console.log('preveq', previous)
+        if (!operation.input1 && !previous.input2) {
             if(errState) {
                 resetError()
             }
@@ -165,7 +188,7 @@ function equals() {
                 operation.operator = e.target.textContent;
                 operation.result = operation.input1;
                 equation.textContent = operation.input1 + operation.operator;
-                console.log("NoInput1 & NoPrev1", operation)
+                console.log("NoInput1 & NoPrev2", operation)
             }  
         }
         else if (!operation.operator) {
@@ -252,7 +275,7 @@ function clearPreviousOperation() {
 
 function saveHistory(op) {
     previous.input1 = op.input1;
-    previous.input2 = op.input2;screenX
+    previous.input2 = op.input2;
     previous.operator = op.operator;
     previous.result = errState === true ? null : op.result;
     clearOperation()
@@ -266,7 +289,7 @@ function resetError() {
 
 function handleKeypress(keyEvent) {
     let btn;
-    if (keyEvent.code === "NumpadEnter") {
+    if (keyEvent.code === "NumpadEqual") {
         btn = document.querySelector(`button[data-altNumpad=${keyEvent.code}]`)
     }
     else if (keyEvent.location === 3) {
@@ -284,6 +307,7 @@ function handleKeypress(keyEvent) {
     if (btn) {
         btn.click();
     }
+    btn = null;
 }
 
 function displayTooLong() {
@@ -305,6 +329,7 @@ function checkDisplayLength() {
     }
 }
 
+clearEntryButton()
 backspace()
 displayNumbers()
 decimalButton()
