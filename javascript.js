@@ -17,6 +17,10 @@ const previous = {
 
 let errState = false;
 
+window.addEventListener('keydown', (e) => {
+    handleKeypress(e)
+});
+
 function add(num1, num2) {
     return "" + (num1 + num2);
 }
@@ -26,7 +30,7 @@ function subtract(num1, num2) {
 }
 
 function multiply(num1, num2) {
-    let rounded = Math.round((num1 * num2) * 100000000) / 10000000;
+    let rounded = Math.round((num1 * num2) * 100000000) / 100000000;
     rounded = "" + rounded;
     rounded = rounded.replace(/[.]0+$/g, '')
     return rounded;
@@ -42,7 +46,7 @@ function divide(num1, num2) {
         errState = true;
         return errormsg;
     }
-    let rounded = Math.round((num1 / num2) * 10000000000) / 10000000000;
+    let rounded = Math.round((num1 / num2) * 1000000000) / 1000000000;
     rounded = "" + rounded;
     rounded = rounded.replace(/[.]0+$/g, '')
     return rounded;
@@ -260,14 +264,38 @@ function resetError() {
         errState = false;
 }
 
+function handleKeypress(keyEvent) {
+    let btn;
+    if (keyEvent.code === "NumpadEnter") {
+        btn = document.querySelector(`button[data-altNumpad=${keyEvent.code}]`)
+    }
+    else if (keyEvent.location === 3) {
+        btn = document.querySelector(`button[data-Numpad=${keyEvent.code}]`)
+    }
+    else if (keyEvent.shiftKey) {
+        btn = document.querySelector(`button[data-key=shift${keyEvent.code}]`)
+    }
+    else if (keyEvent.code === "Enter") {
+        btn = document.querySelector(`button[data-altKey=${keyEvent.code}]`)
+    }
+    else {
+        btn = document.querySelector(`button[data-key=${keyEvent.code}]`);
+    }
+    if (btn) {
+        btn.click();
+    }
+}
+
 function displayTooLong() {
     const displayContainer = document.querySelector('.displaycontainer');
     return display.offsetWidth >= displayContainer.offsetWidth 
 }
 
 //fix rounding// exponentiation
+// maybe check less than 1
+// or digit
 function checkDisplayLength() {
-    if(displayTooLong()) {
+    if(displayTooLong() ) {
         display.textContent = Number.parseFloat(display.textContent).toExponential(10);
     }
     else {

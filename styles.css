@@ -121,12 +121,15 @@ h6 {
     gap: 2px;
 }
 
-
-.clear, .backspace {
+.backspace {
     flex-basis: 50%;
     gap: 3px;
 }
 
+.clearEntry, .clear {
+    flex-basis: 25%;
+    min-height: 100%;
+}
 .btnrow > button {
     flex-basis: 25%;
     min-height: 100%;
@@ -144,6 +147,6 @@ h6 {
     background-color: rgb(211, 211, 211);
 }
 
-.operator, .decimal, .clear, .equals, .backspace {
+.operator, .decimal, .clear, .equals, .backspace, .clearEntry {
     background-color: rgb(230, 230, 230);
 }
