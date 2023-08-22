@@ -71,7 +71,7 @@ function displayNumbers() {
                 resetError();
             }
             if (!displayTooLong()) {
-                if (!operation.input1 || (operation.input1 === '0' && display.textContent === '0' && previous.result !== '0')) {
+                if ((!operation.input1 || Number(operation.input1) === 0) && !operation.operator && !display.textContent.includes('.')/*|| (operation.input1 === '0' && display.textContent === '0' && previous.result !== '0')*/) {
                     display.textContent = btnPressed;
                     operation.input1 = display.textContent;
                     equation.textContent = '';
@@ -148,20 +148,30 @@ function opButtons() {
 function clearEntryButton() {
     const ce = document.querySelector('.clearEntry');
     ce.addEventListener('click', (e) => {
+        console.log('beforeCE', operation);
+        display.textContent = '0'
         if (operation.input1 && !operation.operator && !operation.input2) {
             clearDisplay()
         }
-        else if (previous.result && !operation.input1) {
+        else if (previous.input2 === '0' || (!operation.input1 && previous.result)) {
             clearDisplay()
+            operation.input1 = display.textContent;
+            operation.input2 = previous.input2;
+            operation.operator = previous.operator; 
+        }
+        else if(operation.input1 && operation.operator) {
+            operation.input2 = display.textContent;
+        }
+       /* else if (!operation.input1 && previous.result) {
             operation.input1 = '0'
             operation.input2 = previous.input2;
             operation.operator = previous.operator;
+        }*/
+        else if (operation.input2) {
+            operation.input2 = '0'
         }
-        else if ((operation.input1 && operation.operator && !operation.input2) || operation.input2) {
-            operation.input2 = '0';
-            display.textContent = operation.input2
-        }
-        console.dir(operation);
+        
+        console.log('afterCE', operation);
     })
 }
 
@@ -185,16 +195,24 @@ function equals() {
             }
             else {
                 operation.input1 = display.textContent;
-                operation.operator = e.target.textContent;
                 operation.result = operation.input1;
-                equation.textContent = operation.input1 + operation.operator;
+                equation.textContent = operation.input1 + e.target.textContent;
                 console.log("NoInput1 & NoPrev2", operation)
             }  
+        }
+        else if (operation.input1 && !operation.operator && previous.input2) {
+            operation.input1 = operation.input1.replace(/(^-?\d+\.\d*[1-9])(0+$)|(\.0+$)/g, "$1");
+            operation.operator = previous.operator;
+            operation.input2 = previous.input2
+            operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
+            equation.textContent = operation.input1 + operation.operator + operation.input2 + e.target.textContent;
+            display.textContent = operation.result;
         }
         else if (!operation.operator) {
             if (!previous.result || operation.input1) {
                 display.textContent = display.textContent.replace(/(^-?\d+\.\d*[1-9])(0+$)|(\.0+$)|(\.$)/g, "$1");
                 operation.input1 = display.textContent;
+                operation.result = operation.input1;
                 equation.textContent = operation.input1 + e.target.textContent;
                 console.log("NoOp, NoPrevRes OR NoOp, YesInput1", operation)
             }
@@ -230,7 +248,7 @@ function backspace() {
     const del = document.querySelector('.backspace');
     del.addEventListener('click', (e) => {
         console.log("before backspace", operation)
-        if (display.textContent.length > 1 && (operation.input1 ||operation.input2)) {
+        if (display.textContent.length > 1 && (operation.input1 || operation.input2)) {
             display.textContent = display.textContent.slice(0, -1)
             if (operation.input1 && !operation.operator) {
                 operation.input1 = display.textContent;
