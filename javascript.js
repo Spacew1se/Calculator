@@ -320,6 +320,9 @@ function handleKeypress(keyEvent) {
         btn = document.querySelector(`button[data-altKey=${keyEvent.code}]`)
     }
     else {
+        if (keyEvent.code === "Slash") {
+            keyEvent.preventDefault();
+        }
         btn = document.querySelector(`button[data-key=${keyEvent.code}]`);
     }
     if (btn) {
