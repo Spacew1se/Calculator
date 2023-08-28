@@ -1,6 +1,6 @@
-const display = document.querySelector('.display');
-const equation = document.querySelector('.eqndisplay');
-
+//
+//Define global objects and variables
+//
 const operation = {
     input1: '0',
     input2: null,
@@ -15,12 +15,21 @@ const previous = {
     result: null,
 }
 
+const display = document.querySelector('.display');
+const equation = document.querySelector('.eqndisplay');
 const operators = [' + ', ' - ', ' * ', ' / ']
-let prevPressed = false;
+let prevPressed = null;
 let errState = false;
 
+//
+//Call function that will add event listeners
+//
 addEventListeners();
 
+
+//
+//Function definitions
+//
 function add(num1, num2) {
     return "" + (num1 + num2);
 }
@@ -64,7 +73,7 @@ function operate(num1, num2, op) {
 function updateDisplay(btnPressed) {
     if (errState) resetError();
     if (!displayTooLong()) {
-        console.log(isNaN(btnPressed))
+        console.log('button input', btnPressed)
         if (!isNaN(btnPressed)) updateDigit(btnPressed);
         else if (operators.includes(btnPressed)) updateOperator(btnPressed);
         else if (btnPressed === ' = ') equals();
@@ -76,16 +85,14 @@ function updateDisplay(btnPressed) {
     }
 }
 
-function updateDigit (btnPressed) {
-    if (display.textContent == '0' || (operation.operator && !operation.input2) || (previous.result && !operation.operator && prevPressed == ' = ')) {
+function updateDigit(btnPressed) {
+    if (display.textContent === '0' || (operation.operator && !operation.input2) || (previous.result && !operation.operator && prevPressed === ' = ')) {
         display.textContent = btnPressed;
     }
     else display.textContent += btnPressed;
     if (!operation.operator) {
+        if (previous.result) equation.textContent = '';
         operation.input1 = display.textContent;
-        if (previous.result) {
-            equation.textContent = '';
-        }
     }
     else operation.input2 = display.textContent;
     console.log("clicking digits", operation);
@@ -93,38 +100,35 @@ function updateDigit (btnPressed) {
 
 function updateDecimal() {
     console.log("before decimal", operation)
-    if (operation.input1 == '0') {
+    if ((operation.input1 === '0' && !operation.operator) || (operation.operator && !operation.input2) || (previous.result && !operation.operator && prevPressed === ' = ')) {
         display.textContent = '0.';
-        operation.input1 = display.textContent;
-        equation.textContent = '';
-    }
-    else if (operation.operator && !operation.input2) {
-        display.textContent = '0.';
-        operation.input2 = display.textContent;
     }
     else if (!display.textContent.includes('.')) {
         display.textContent += '.';
     }
+    if(!operation.operator) {
+        if (previous.result) equation.textContent = '';
+        operation.input1 = display.textContent;
+    } 
+    else operation.input2 = display.textContent;
     console.log("after decimal", operation)
 }
 
 function updateOperator(btnPressed) {
     console.log("before operator", operation);
     console.log("prev operation before operator", previous);
-    if (!errState) {
-        if (operation.input1 != '0') {
-            display.textContent = display.textContent.replace(/(^-?\d+\.\d*[1-9])(0+$)|(\.0+$)|(\.$)/g, "$1");
-        }
-        if (operation.input2) {
-            operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
-            display.textContent = operation.result;
-            operation.input2 = null;
-        }
-        checkDisplayLength();
-        operation.input1 = display.textContent;
-        operation.operator = btnPressed;
-        equation.textContent = operation.input1 + operation.operator;
+    if (operation.input1 !== '0') {
+        display.textContent = stripTrailingChars(display.textContent);
     }
+    if (operation.input2) {
+        operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
+        display.textContent = operation.result;
+        operation.input2 = null;
+    }
+    checkDisplayLength();
+    operation.input1 = display.textContent;
+    operation.operator = btnPressed;
+     equation.textContent = operation.input1 + operation.operator;
     console.log("after operators", operation)
 }
 
@@ -150,24 +154,10 @@ function equals() {
     console.log('equation before =', operation)
     console.log('previous equation before =', previous)
 
-    //This will occur at the beginning of the program
-    //Or after an error i.e. division by zero
-    if (!operation.input1 && !previous.input2) {
-        if (errState) {
-            resetError()
-        }
-        else {
-            operation.input1 = display.textContent;
-            operation.result = operation.input1;
-            equation.textContent = operation.input1 + e.target.textContent;
-            console.log("NoInput1 & NoPrev2", operation)
-        }
-    }
-
     //When clear entry is pressed directly after equal
-    else if (operation.input1 == '0' && operation.operator && operation.input2) {
+    if (operation.input1 === '0' && operation.operator && operation.input2) {
         operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
-        equation.textContent = operation.input1 + operation.operator + operation.input2 + e.target.textContent;
+        equation.textContent = operation.input1 + operation.operator + operation.input2 + ' = ';
         display.textContent = operation.result;
         console.log("NoInput1 and YesOperator and YesInput2", operation)
     }
@@ -175,8 +165,8 @@ function equals() {
     //When equal is pressed when there is one input and no operator entered
     //The one input can either be the result of a previous operation
     //or entered by the user after a successful previous operation
-    else if (operation.input1 && !operation.operator && previous.input2) {
-        operation.input1 = operation.input1.replace(/(^-?\d+\.\d*[1-9])(0+$)|(\.0+$)/g, "$1");
+    else if (!operation.operator && previous.input2) {
+        operation.input1 = stripTrailingChars(operation.input1);
         operation.operator = previous.operator;
         operation.input2 = previous.input2
         operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
@@ -187,12 +177,12 @@ function equals() {
 
     else if (!operation.operator) {
 
-        if (!previous.result || operation.input1) {
-            display.textContent = display.textContent.replace(/(^-?\d+\.\d*[1-9])(0+$)|(\.0+$)|(\.$)/g, "$1");
+        if (!previous.input2) {
+            display.textContent = stripTrailingChars(display.textContent);
             operation.input1 = display.textContent;
             operation.result = operation.input1;
             equation.textContent = operation.input1 + ' = ';
-            console.log("NoOp, NoPrevRes OR NoOp, YesInput1", operation)
+            console.log("No Operator, No Previous Input 2", operation)
         }
 
         else {
@@ -215,14 +205,14 @@ function equals() {
     }
 
     else {
-        operation.input2 = operation.input2.replace(/(^-?\d+\.\d*[1-9])(0+$)|(\.0+$)/g, "$1");
+        operation.input2 = stripTrailingChars(operation.input2);
         equation.textContent = operation.input1 + operation.operator + operation.input2 + ' = ';
         operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
         display.textContent = operation.result;
         console.log("Else {Presumably in1 & op & in2", operation)
     }
 
-    checkDisplayLength()
+    checkDisplayLength();
     console.log("equation after =", operation)
     saveHistory(operation);
     console.log('previous equation after =', previous)
@@ -274,6 +264,7 @@ function clearPreviousOperation() {
     previous.input2 = null;
     previous.operator = null;
     previous.result = null;
+    prevPressed = null;
 }
 
 function clearAll() {
@@ -294,6 +285,10 @@ function resetError() {
     clearDisplay();
     clearPreviousOperation();
     errState = false;
+}
+
+function stripTrailingChars(numberString) {
+    return numberString.replace(/(^-?\d+\.\d*[1-9])(0+$)|(\.0+$)|(\.$)/g, "$1");
 }
 
 function displayTooLong() {
@@ -339,13 +334,11 @@ function handleKeypress(keyEvent) {
         btn = document.querySelector(`button[data-altKey=${keyEvent.code}]`)
     }
     else {
-        if (keyEvent.code === "Slash") {
-            keyEvent.preventDefault();
-        }
         btn = document.querySelector(`button[data-key=${keyEvent.code}]`);
     }
     if (btn) {
+        keyEvent.preventDefault();
         updateDisplay(btn.textContent)
-        console.log("pressing keyboard digits", operation)
+        console.log("pressing keyboard", operation)
     }
 }
