@@ -15,6 +15,7 @@ const previous = {
     result: null,
 }
 
+const operators = [' + ', ' - ', ' * ', ' / ']
 let prevPressed = false;
 let errState = false;
 
@@ -62,16 +63,234 @@ function operate(num1, num2, op) {
     }
 }
 
+
 function handleDigitClick() {
-    const buttons = document.querySelectorAll('.digit');
-    
+    const buttons = document.querySelectorAll('.digit'); 
     buttons.forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const btnPressed = e.target.textContent;
-            updateDisplay(btnPressed);
-            console.log("clicking digits", operation) 
+            updateDisplay(e.target.textContent); 
         }); 
     }); 
+}
+
+function updateDigit (btnPressed) {
+    if (display.textContent == '0' || (operation.operator && !operation.input2) || (previous.result && !operation.operator && prevPressed == ' = ')) {
+        display.textContent = btnPressed;
+    }
+    else display.textContent += btnPressed;
+    if (!operation.operator) {
+        operation.input1 = display.textContent;
+        if (previous.result) {
+            equation.textContent = '';
+        }
+    }
+    else operation.input2 = display.textContent;
+    console.log("clicking digits", operation);
+}
+
+function handleDecimalClick() {
+    const decbtn = document.querySelector('.decimal');
+    decbtn.addEventListener('click', (e) => {
+        updateDisplay(e.target.textContent)
+    });
+}
+
+function updateDecimal() {
+    console.log("before decimal", operation)
+    if (operation.input1 == '0') {
+        display.textContent = '0.';
+        operation.input1 = display.textContent;
+        equation.textContent = '';
+    }
+    else if (operation.operator && !operation.input2) {
+        display.textContent = '0.';
+        operation.input2 = display.textContent;
+    }
+    else if (!display.textContent.includes('.')) {
+        display.textContent += '.';
+    }
+    console.log("after decimal", operation)
+}
+
+function handleOperatorClick() {
+    const opButtons = document.querySelectorAll('.operator');
+    opButtons.forEach(opBtn => {     
+        opBtn.addEventListener('click', (e) => {
+            updateDisplay(e.target.textContent);
+        });
+    });
+}
+
+function updateOperator(btnPressed) {
+    console.log("before operator", operation);
+    console.log("prev operation before operator", previous);
+    if (!errState) {
+        if (operation.input1 != '0') {
+            display.textContent = display.textContent.replace(/(^-?\d+\.\d*[1-9])(0+$)|(\.0+$)|(\.$)/g, "$1");
+        }
+        if (operation.input2) {
+            operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
+            display.textContent = operation.result;
+            operation.input2 = null;
+        }
+        checkDisplayLength();
+        operation.input1 = display.textContent;
+        operation.operator = btnPressed;
+        equation.textContent = operation.input1 + operation.operator;
+    }
+    console.log("after operators", operation)
+}
+
+function handleClearEntryClick() {
+    const ce = document.querySelector('.clearEntry');
+    ce.addEventListener('click', (e) => {
+        updateDisplay(e.target.textContent);
+    })
+}
+
+function clearEntry() {
+    console.log('beforeCE', operation);
+    display.textContent = '0'
+    if (!operation.operator && !operation.input2) {
+        console.log("In1, NoOp, NoIn2", operation, previous)
+        clearDisplay()
+    }
+    else if (operation.input1 && operation.operator) {
+        console.log("In1, YesOp", operation, previous)
+        operation.input2 = '0';
+    }
+    else if (operation.input2) {
+        console.log("YesIn2", operation, previous)
+        operation.input2 = '0'
+    }
+    console.log('afterCE', operation);
+}
+
+function handleClearClick() {
+    const clear = document.querySelector('.clear')
+    clear.addEventListener('click', (e) => {
+        updateDisplay(e.target.textContent)
+    });
+}
+
+function handleEqualsClick() {
+    const equals = document.querySelector('.equals');
+    equals.addEventListener('click', (e) => {
+        updateDisplay(e.target.textContent);
+    });
+}
+
+function equals() {
+    console.log('equation before =', operation)
+    console.log('previous equation before =', previous)
+
+    //This will occur at the beginning of the program
+    //Or after an error i.e. division by zero
+    if (!operation.input1 && !previous.input2) {
+        if (errState) {
+            resetError()
+        }
+        else {
+            operation.input1 = display.textContent;
+            operation.result = operation.input1;
+            equation.textContent = operation.input1 + e.target.textContent;
+            console.log("NoInput1 & NoPrev2", operation)
+        }
+    }
+
+    //When clear entry is pressed directly after equal
+    else if (operation.input1 == '0' && operation.operator && operation.input2) {
+        operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
+        equation.textContent = operation.input1 + operation.operator + operation.input2 + e.target.textContent;
+        display.textContent = operation.result;
+        console.log("NoInput1 and YesOperator and YesInput2", operation)
+    }
+
+    //When equal is pressed when there is one input and no operator entered
+    //The one input can either be the result of a previous operation
+    //or entered by the user after a successful previous operation
+    else if (operation.input1 && !operation.operator && previous.input2) {
+        operation.input1 = operation.input1.replace(/(^-?\d+\.\d*[1-9])(0+$)|(\.0+$)/g, "$1");
+        operation.operator = previous.operator;
+        operation.input2 = previous.input2
+        operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
+        equation.textContent = operation.input1 + operation.operator + operation.input2 + ' = ';
+        display.textContent = operation.result;
+        console.log("Input1 and NoOperator and PrevInput2", operation)
+    }
+
+    else if (!operation.operator) {
+
+        if (!previous.result || operation.input1) {
+            display.textContent = display.textContent.replace(/(^-?\d+\.\d*[1-9])(0+$)|(\.0+$)|(\.$)/g, "$1");
+            operation.input1 = display.textContent;
+            operation.result = operation.input1;
+            equation.textContent = operation.input1 + ' = ';
+            console.log("NoOp, NoPrevRes OR NoOp, YesInput1", operation)
+        }
+
+        else {
+            operation.input1 = previous.result;
+            operation.input2 = previous.input2;
+            operation.operator = previous.operator;
+            operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
+            equation.textContent = operation.input1 + operation.operator + operation.input2 + ' = ';
+            display.textContent = operation.result;
+            console.log("No Operator, YesPrevResult and NoInput", operation)
+        }
+    }
+
+    else if (!operation.input2) {
+        operation.input2 = operation.input1;
+        equation.textContent = operation.input1 + operation.operator + operation.input2 + ' = ';
+        operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
+        display.textContent = operation.result;
+        console.log("input1, YesOp, NoInput2", operation)
+    }
+
+    else {
+        operation.input2 = operation.input2.replace(/(^-?\d+\.\d*[1-9])(0+$)|(\.0+$)/g, "$1");
+        equation.textContent = operation.input1 + operation.operator + operation.input2 + ' = ';
+        operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
+        display.textContent = operation.result;
+        console.log("Else {Presumably in1 & op & in2", operation)
+    }
+
+    checkDisplayLength()
+    console.log("equation after =", operation)
+    saveHistory(operation);
+    console.log('previous equation after =', previous)
+}
+
+function handleBackspaceClick() {
+    const del = document.querySelector('.backspace');
+    del.addEventListener('click', (e) => {
+        updateDisplay(e.target.textContent)
+    })
+}
+
+function backspace() {
+    console.log("before backspace", operation)
+    if (display.textContent.length > 1 && (operation.input1 || operation.input2)) {
+        display.textContent = display.textContent.slice(0, -1)
+        if (operation.input1 && !operation.operator) {
+            operation.input1 = display.textContent;
+        }
+        else if (operation.input2) {
+            operation.input2 = display.textContent;
+        }
+    }
+    else if (display.textContent.length === 1) {
+        if (operation.input2) {
+            display.textContent = '0';
+            operation.input2 = display.textContent;
+        }
+        else if (operation.input1 && !operation.operator) {
+            display.textContent = '0';
+            operation.input1 = null;
+        }
+    }
+    console.log("after backspace", operation)
 }
 
 function handleKeypress(keyEvent) {
@@ -102,227 +321,17 @@ function handleKeypress(keyEvent) {
 
 function updateDisplay(btnPressed) {
     if (errState) resetError();
-
     if (!displayTooLong()) {
         console.log(isNaN(btnPressed))
         if (!isNaN(btnPressed)) updateDigit(btnPressed);
-        if (btnPressed === '.') updateDecimal(btnPressed);
-
+        else if (operators.includes(btnPressed)) updateOperator(btnPressed);
+        else if (btnPressed === ' = ') equals();
+        else if (btnPressed === '.') updateDecimal();
+        else if (btnPressed === 'CE') clearEntry();
+        else if (btnPressed === 'C') clearAll();
+        else if (btnPressed === 'DEL') backspace();
+        prevPressed = btnPressed;
     }
-}
-
-function updateDigit (btnPressed) {
-    if (display.textContent == '0' || (operation.operator && !operation.input2) || (previous.result && !operation.operator && prevPressed == ' = ')) {
-        display.textContent = btnPressed;
-    }
-    else display.textContent += btnPressed;
-    if (!operation.operator) {
-        operation.input1 = display.textContent;
-        if (previous.result) {
-            equation.textContent = '';
-        }
-    }
-    else operation.input2 = display.textContent;
-}
-
-function handleDecimalClick() {
-    const decbtn = document.querySelector('.decimal');
-    decbtn.addEventListener('click', (e) => {
-        console.log("before decimal", operation)
-        updateDisplay()
-        console.log("after decimal", operation)
-    });
-}
-
-function updateDecimal() {
-    if (operation.input1 == '0') {
-        display.textContent = '0.';
-        operation.input1 = display.textContent;
-        equation.textContent = '';
-    }
-    else if (operation.operator && !operation.input2) {
-        display.textContent = '0.';
-        operation.input2 = display.textContent;
-    }
-    else if (!display.textContent.includes('.')) {
-        display.textContent += '.';
-    }
-    prevPressed = '.';
-}
-
-function opButtons() {
-    const opButtons = document.querySelectorAll('.operator');
-    opButtons.forEach(btn => {
-        
-        btn.addEventListener('click', (e) => {
-            console.log("before op", operation);
-            console.log("prev op before op", previous);
-
-            if (!errState) {
-                if (operation.input1 != '0') {
-                    display.textContent = display.textContent.replace(/(^-?\d+\.\d*[1-9])(0+$)|(\.0+$)|(\.$)/g, "$1");
-                }
-                if (operation.input2) {
-                    operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
-                    display.textContent = operation.result;
-                    operation.input2 = null;
-                    
-                }
-                checkDisplayLength();
-                operation.input1 = display.textContent;
-                operation.operator = e.target.textContent;
-                equation.textContent = operation.input1 + operation.operator;
-                console.log("after operators", operation)
-            }
-            prevPressed = e.target.textContent
-        });
-    });
-}
-
-function clearEntryButton() {
-    const ce = document.querySelector('.clearEntry');
-    ce.addEventListener('click', (e) => {
-        console.log('beforeCE', operation);
-        display.textContent = '0'
-        if (!operation.operator && !operation.input2) {
-            console.log("In1, NoOp, NoIn2" , operation, previous)
-            clearDisplay()
-        }
-        else if(operation.input1 && operation.operator) {
-            console.log("In1, YesOp", operation, previous)
-            operation.input2 = '0';
-        }
-        else if (operation.input2) {
-            console.log("YesIn2", operation, previous)
-            operation.input2 = '0'
-        }
-        prevPressed = e.target.textContent
-        console.log('afterCE', operation);
-    })
-}
-
-function clearButton() {
-    const clear = document.querySelector('.clear')
-    clear.addEventListener('click', (e) => {
-        clearDisplay();
-        clearPreviousOperation();
-        prevPressed = e.target.textContent
-    });
-}
-
-function equals() {
-    const equals = document.querySelector('.equals');
-    equals.addEventListener('click', (e) => {
-      
-        console.log('equation before =', operation)
-        console.log('previous equation before =', previous)
-
-        //This will occur at the beginning of the program
-        //Or after an error i.e. division by zero
-        if (!operation.input1 && !previous.input2) {
-            if(errState) {
-                resetError()
-            }
-            else {
-                operation.input1 = display.textContent;
-                operation.result = operation.input1;
-                equation.textContent = operation.input1 + e.target.textContent;
-                console.log("NoInput1 & NoPrev2", operation)
-            }  
-        }
-
-        //When clear entry is pressed directly after equal
-        else if(operation.input1 == '0' && operation.operator && operation.input2) {
-            operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
-            equation.textContent = operation.input1 + operation.operator + operation.input2 + e.target.textContent;
-            display.textContent = operation.result;
-            console.log("NoInput1 and YesOperator and YesInput2", operation)
-        }
-
-        //When equal is pressed when there is one input and no operator entered
-        //The one input can either be the result of a previous operation
-        //or entered by the user after a successful previous operation
-        else if (operation.input1 && !operation.operator && previous.input2) {
-            operation.input1 = operation.input1.replace(/(^-?\d+\.\d*[1-9])(0+$)|(\.0+$)/g, "$1");
-            operation.operator = previous.operator;
-            operation.input2 = previous.input2
-            operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
-            equation.textContent = operation.input1 + operation.operator + operation.input2 + e.target.textContent;
-            display.textContent = operation.result;
-            console.log("Input1 and NoOperator and PrevInput2", operation)
-        }
-
-        else if (!operation.operator) {
-
-            if (!previous.result || operation.input1) {
-                display.textContent = display.textContent.replace(/(^-?\d+\.\d*[1-9])(0+$)|(\.0+$)|(\.$)/g, "$1");
-                operation.input1 = display.textContent;
-                operation.result = operation.input1;
-                equation.textContent = operation.input1 + e.target.textContent;
-                console.log("NoOp, NoPrevRes OR NoOp, YesInput1", operation)
-            }
-
-            else {
-                operation.input1 = previous.result;
-                operation.input2 = previous.input2;
-                operation.operator = previous.operator;
-                operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
-                equation.textContent = operation.input1 + operation.operator + operation.input2 + e.target.textContent;
-                display.textContent = operation.result;
-                console.log("No Operator, YesPrevResult and NoInput", operation)
-            }
-        }
-
-        else if (!operation.input2) {
-            operation.input2 = operation.input1;
-            equation.textContent = operation.input1 + operation.operator + operation.input2 + e.target.textContent;
-            operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
-            display.textContent = operation.result;
-            console.log("input1, YesOp, NoInput2", operation)
-        }
-
-        else {
-            operation.input2 = operation.input2.replace(/(^-?\d+\.\d*[1-9])(0+$)|(\.0+$)/g, "$1");
-            equation.textContent = operation.input1 + operation.operator + operation.input2 + e.target.textContent;
-            operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
-            display.textContent = operation.result;
-            console.log("Else {Presumably in1 & op & in2", operation)    
-        }
-
-        checkDisplayLength()
-        console.log("equation after =", operation)
-        saveHistory(operation);
-        console.log('previous equation after =', previous)
-        prevPressed = e.target.textContent
-    });
-}
-
-function backspace() {
-    const del = document.querySelector('.backspace');
-    del.addEventListener('click', (e) => {
-        console.log("before backspace", operation)
-        if (display.textContent.length > 1 && (operation.input1 || operation.input2)) {
-            display.textContent = display.textContent.slice(0, -1)
-            if (operation.input1 && !operation.operator) {
-                operation.input1 = display.textContent;
-            }
-            else if (operation.input2) {
-                operation.input2 = display.textContent;
-            }            
-        }
-        else if (display.textContent.length === 1) {
-            if(operation.input2) {
-                display.textContent = '0';
-                operation.input2 = display.textContent;
-            }
-            else if(operation.input1 && !operation.operator) {
-                display.textContent = '0';
-                operation.input1 = null;
-            }
-        }
-        prevPressed = e.target.textContent
-        console.log("after backspace", operation)
-    })
 }
 
 function clearDisplay() {
@@ -347,6 +356,11 @@ function clearPreviousOperation() {
     previous.input2 = null;
     previous.operator = null;
     previous.result = null;
+}
+
+function clearAll() {
+    clearDisplay();
+    clearPreviousOperation();
 }
 
 function saveHistory(op) {
@@ -379,11 +393,14 @@ function checkDisplayLength() {
     }
 }
 
+function initializeClickHandlers() {
+    handleEqualsClick()
+    handleBackspaceClick()
+    handleDigitClick()
+    handleDecimalClick()
+    handleOperatorClick()
+    handleClearClick()
+    handleClearEntryClick()
+}
 
-clearEntryButton()
-backspace()
-handleDigitClick()
-handleDecimalClick()
-opButtons()
-clearButton()
-equals()
+initializeClickHandlers();
