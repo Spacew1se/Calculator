@@ -19,9 +19,7 @@ const operators = [' + ', ' - ', ' * ', ' / ']
 let prevPressed = false;
 let errState = false;
 
-window.addEventListener('keydown', (e) => {
-    handleKeypress(e)
-});
+addEventListeners();
 
 function add(num1, num2) {
     return "" + (num1 + num2);
@@ -63,14 +61,19 @@ function operate(num1, num2, op) {
     }
 }
 
-
-function handleDigitClick() {
-    const buttons = document.querySelectorAll('.digit'); 
-    buttons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            updateDisplay(e.target.textContent); 
-        }); 
-    }); 
+function updateDisplay(btnPressed) {
+    if (errState) resetError();
+    if (!displayTooLong()) {
+        console.log(isNaN(btnPressed))
+        if (!isNaN(btnPressed)) updateDigit(btnPressed);
+        else if (operators.includes(btnPressed)) updateOperator(btnPressed);
+        else if (btnPressed === ' = ') equals();
+        else if (btnPressed === '.') updateDecimal();
+        else if (btnPressed === 'CE') clearEntry();
+        else if (btnPressed === 'C') clearAll();
+        else if (btnPressed === 'DEL') backspace();
+        prevPressed = btnPressed;
+    }
 }
 
 function updateDigit (btnPressed) {
@@ -88,13 +91,6 @@ function updateDigit (btnPressed) {
     console.log("clicking digits", operation);
 }
 
-function handleDecimalClick() {
-    const decbtn = document.querySelector('.decimal');
-    decbtn.addEventListener('click', (e) => {
-        updateDisplay(e.target.textContent)
-    });
-}
-
 function updateDecimal() {
     console.log("before decimal", operation)
     if (operation.input1 == '0') {
@@ -110,15 +106,6 @@ function updateDecimal() {
         display.textContent += '.';
     }
     console.log("after decimal", operation)
-}
-
-function handleOperatorClick() {
-    const opButtons = document.querySelectorAll('.operator');
-    opButtons.forEach(opBtn => {     
-        opBtn.addEventListener('click', (e) => {
-            updateDisplay(e.target.textContent);
-        });
-    });
 }
 
 function updateOperator(btnPressed) {
@@ -141,13 +128,6 @@ function updateOperator(btnPressed) {
     console.log("after operators", operation)
 }
 
-function handleClearEntryClick() {
-    const ce = document.querySelector('.clearEntry');
-    ce.addEventListener('click', (e) => {
-        updateDisplay(e.target.textContent);
-    })
-}
-
 function clearEntry() {
     console.log('beforeCE', operation);
     display.textContent = '0'
@@ -164,20 +144,6 @@ function clearEntry() {
         operation.input2 = '0'
     }
     console.log('afterCE', operation);
-}
-
-function handleClearClick() {
-    const clear = document.querySelector('.clear')
-    clear.addEventListener('click', (e) => {
-        updateDisplay(e.target.textContent)
-    });
-}
-
-function handleEqualsClick() {
-    const equals = document.querySelector('.equals');
-    equals.addEventListener('click', (e) => {
-        updateDisplay(e.target.textContent);
-    });
 }
 
 function equals() {
@@ -262,13 +228,6 @@ function equals() {
     console.log('previous equation after =', previous)
 }
 
-function handleBackspaceClick() {
-    const del = document.querySelector('.backspace');
-    del.addEventListener('click', (e) => {
-        updateDisplay(e.target.textContent)
-    })
-}
-
 function backspace() {
     console.log("before backspace", operation)
     if (display.textContent.length > 1 && (operation.input1 || operation.input2)) {
@@ -291,47 +250,6 @@ function backspace() {
         }
     }
     console.log("after backspace", operation)
-}
-
-function handleKeypress(keyEvent) {
-    let btn;
-    if (keyEvent.code === "NumpadEqual") {
-        btn = document.querySelector(`button[data-altNumpad=${keyEvent.code}]`)
-    }
-    else if (keyEvent.location === 3) {
-        btn = document.querySelector(`button[data-Numpad=${keyEvent.code}]`)
-    }
-    else if (keyEvent.shiftKey) {
-        btn = document.querySelector(`button[data-key=shift${keyEvent.code}]`)
-    }
-    else if (keyEvent.code === "Enter") {
-        btn = document.querySelector(`button[data-altKey=${keyEvent.code}]`)
-    }
-    else {
-        if (keyEvent.code === "Slash") {
-            keyEvent.preventDefault();
-        }
-        btn = document.querySelector(`button[data-key=${keyEvent.code}]`);
-    }
-    if (btn) {
-        updateDisplay(btn.textContent)
-        console.log("pressing keyboard digits", operation)
-    }
-}
-
-function updateDisplay(btnPressed) {
-    if (errState) resetError();
-    if (!displayTooLong()) {
-        console.log(isNaN(btnPressed))
-        if (!isNaN(btnPressed)) updateDigit(btnPressed);
-        else if (operators.includes(btnPressed)) updateOperator(btnPressed);
-        else if (btnPressed === ' = ') equals();
-        else if (btnPressed === '.') updateDecimal();
-        else if (btnPressed === 'CE') clearEntry();
-        else if (btnPressed === 'C') clearAll();
-        else if (btnPressed === 'DEL') backspace();
-        prevPressed = btnPressed;
-    }
 }
 
 function clearDisplay() {
@@ -393,14 +311,41 @@ function checkDisplayLength() {
     }
 }
 
-function initializeClickHandlers() {
-    handleEqualsClick()
-    handleBackspaceClick()
-    handleDigitClick()
-    handleDecimalClick()
-    handleOperatorClick()
-    handleClearClick()
-    handleClearEntryClick()
+function addEventListeners() {
+    const buttons = document.querySelectorAll('button');
+    buttons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            updateDisplay(e.target.textContent);
+        });
+    });
+
+    window.addEventListener('keydown', (e) => {
+        handleKeypress(e)
+    });
 }
 
-initializeClickHandlers();
+function handleKeypress(keyEvent) {
+    let btn;
+    if (keyEvent.code === "NumpadEqual") {
+        btn = document.querySelector(`button[data-altNumpad=${keyEvent.code}]`)
+    }
+    else if (keyEvent.location === 3) {
+        btn = document.querySelector(`button[data-Numpad=${keyEvent.code}]`)
+    }
+    else if (keyEvent.shiftKey) {
+        btn = document.querySelector(`button[data-key=shift${keyEvent.code}]`)
+    }
+    else if (keyEvent.code === "Enter") {
+        btn = document.querySelector(`button[data-altKey=${keyEvent.code}]`)
+    }
+    else {
+        if (keyEvent.code === "Slash") {
+            keyEvent.preventDefault();
+        }
+        btn = document.querySelector(`button[data-key=${keyEvent.code}]`);
+    }
+    if (btn) {
+        updateDisplay(btn.textContent)
+        console.log("pressing keyboard digits", operation)
+    }
+}
