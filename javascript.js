@@ -64,8 +64,8 @@ function operate(num1, num2, op) {
     switch (op) {
         case ' + ': return add(num1, num2);
         case ' - ': return subtract(num1, num2);
-        case ' * ': return multiply(num1, num2);
-        case ' / ': return divide(num1, num2);
+        case ' × ': return multiply(num1, num2);
+        case ' ÷ ': return divide(num1, num2);
     }
 }
 
@@ -149,10 +149,9 @@ function handleEquals() {
     }
 
     //When equal is pressed when there is one input and no operator entered
-    //The one input can be the result of a previous operation
+    //The one input can be the result of a previous operation, user entered, or default '0'
     else if (!operation.operator) {
         operation.input1 = stripTrailingChars(operation.input1);
-
         if (previous.input2) {
             operation.operator = previous.operator;
             operation.input2 = previous.input2;
