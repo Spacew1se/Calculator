@@ -135,6 +135,10 @@ h6 {
     min-height: 100%;
 }
 
+button:focus-visible {
+    outline: none
+}
+
 .buttons {
     display: flex;
     flex-direction: column;
