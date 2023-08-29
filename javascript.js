@@ -17,8 +17,7 @@ const previous = {
 
 const display = document.querySelector('.display');
 const equation = document.querySelector('.eqndisplay');
-const operators = [' + ', ' - ', ' * ', ' / ']
-let prevPressed = null;
+let equalsPressedLast = false;
 let errState = false;
 
 //
@@ -70,41 +69,43 @@ function operate(num1, num2, op) {
     }
 }
 
-function updateDisplay(btnPressed) {
+function updateDisplay(btn) {
     if (errState) resetError();
-    if (!displayTooLong()) {
-        console.log('button input', btnPressed)
-        if (!isNaN(btnPressed)) updateDigit(btnPressed);
-        else if (operators.includes(btnPressed)) updateOperator(btnPressed);
-        else if (btnPressed === ' = ') equals();
-        else if (btnPressed === '.') updateDecimal();
-        else if (btnPressed === 'CE') clearEntry();
-        else if (btnPressed === 'C') clearAll();
-        else if (btnPressed === 'DEL') backspace();
-        prevPressed = btnPressed;
-    }
+    const btnPressed = btn.textContent;
+    console.log('button input', btn)
+    if (btn.classList.contains('digit')) handleDigit(btnPressed);
+    else if (btn.classList.contains('operator')) handleOperator(btnPressed);
+    else if (btn.classList.contains('equals')) handleEquals();
+    else if (btn.classList.contains('decimal')) handleDecimal();
+    else if (btn.classList.contains('clearEntry')) clearEntry();
+    else if (btn.classList.contains('clear')) clearAll();
+    else if (btn.classList.contains('backspace')) backspace();
 }
 
-function updateDigit(btnPressed) {
-    if (display.textContent === '0' || (operation.operator && !operation.input2) || (previous.result && !operation.operator && prevPressed === ' = ')) {
+function handleDigit(btnPressed) {
+    
+    if (display.textContent === '0' || (operation.operator && !operation.input2) || (!operation.operator && equalsPressedLast)) {
         display.textContent = btnPressed;
     }
-    else display.textContent += btnPressed;
+    else {
+        if (!displayTooLong()) display.textContent += btnPressed;
+    } 
     if (!operation.operator) {
         if (previous.result) equation.textContent = '';
         operation.input1 = display.textContent;
     }
     else operation.input2 = display.textContent;
     console.log("clicking digits", operation);
+    equalsPressedLast = false;
 }
 
-function updateDecimal() {
+function handleDecimal() {
     console.log("before decimal", operation)
-    if ((operation.input1 === '0' && !operation.operator) || (operation.operator && !operation.input2) || (previous.result && !operation.operator && prevPressed === ' = ')) {
+    if ((operation.operator && !operation.input2) || (!operation.operator && equalsPressedLast)) {
         display.textContent = '0.';
     }
     else if (!display.textContent.includes('.')) {
-        display.textContent += '.';
+        if (!displayTooLong()) display.textContent += '.'; 
     }
     if(!operation.operator) {
         if (previous.result) equation.textContent = '';
@@ -112,9 +113,10 @@ function updateDecimal() {
     } 
     else operation.input2 = display.textContent;
     console.log("after decimal", operation)
+    equalsPressedLast = false;
 }
 
-function updateOperator(btnPressed) {
+function handleOperator(btnPressed) {
     console.log("before operator", operation);
     console.log("prev operation before operator", previous);
     if (operation.input1 !== '0') {
@@ -125,119 +127,89 @@ function updateOperator(btnPressed) {
         display.textContent = operation.result;
         operation.input2 = null;
     }
-    checkDisplayLength();
     operation.input1 = display.textContent;
     operation.operator = btnPressed;
-     equation.textContent = operation.input1 + operation.operator;
+    equation.textContent = operation.input1 + operation.operator;
+    equalsPressedLast = false
+    checkDisplayLength();
     console.log("after operators", operation)
 }
 
 function clearEntry() {
     console.log('beforeCE', operation);
-    display.textContent = '0'
-    if (!operation.operator && !operation.input2) {
-        console.log("In1, NoOp, NoIn2", operation, previous)
+    display.textContent = '0';
+    if (!operation.operator) {
+        console.log("No operator", operation, previous)
         clearDisplay()
     }
-    else if (operation.input1 && operation.operator) {
-        console.log("In1, YesOp", operation, previous)
-        operation.input2 = '0';
-    }
-    else if (operation.input2) {
+    else if (operation.operator || operation.input2) {
         console.log("YesIn2", operation, previous)
-        operation.input2 = '0'
+        operation.input2 = '0';
     }
     console.log('afterCE', operation);
 }
 
-function equals() {
-    console.log('equation before =', operation)
+function handleEquals() {
+    console.log('equation befif (!equalsPressedLast) ore =', operation)
     console.log('previous equation before =', previous)
 
-    //When clear entry is pressed directly after equal
-    if (operation.input1 === '0' && operation.operator && operation.input2) {
+    //Any time we have two inputs and one operator
+    if (operation.operator && operation.input2) {
+        operation.input2 = stripTrailingChars(operation.input2);
         operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
         equation.textContent = operation.input1 + operation.operator + operation.input2 + ' = ';
         display.textContent = operation.result;
-        console.log("NoInput1 and YesOperator and YesInput2", operation)
+        console.log("YesOperator and YesInput2", operation)
     }
 
     //When equal is pressed when there is one input and no operator entered
-    //The one input can either be the result of a previous operation
-    //or entered by the user after a successful previous operation
-    else if (!operation.operator && previous.input2) {
-        operation.input1 = stripTrailingChars(operation.input1);
-        operation.operator = previous.operator;
-        operation.input2 = previous.input2
-        operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
-        equation.textContent = operation.input1 + operation.operator + operation.input2 + ' = ';
-        display.textContent = operation.result;
-        console.log("Input1 and NoOperator and PrevInput2", operation)
-    }
-
+    //The one input can be the result of a previous operation
     else if (!operation.operator) {
+        operation.input1 = stripTrailingChars(operation.input1);
 
-        if (!previous.input2) {
-            display.textContent = stripTrailingChars(display.textContent);
-            operation.input1 = display.textContent;
-            operation.result = operation.input1;
-            equation.textContent = operation.input1 + ' = ';
-            console.log("No Operator, No Previous Input 2", operation)
-        }
-
-        else {
-            operation.input1 = previous.result;
-            operation.input2 = previous.input2;
+        if (previous.input2) {
             operation.operator = previous.operator;
+            operation.input2 = previous.input2;
             operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
             equation.textContent = operation.input1 + operation.operator + operation.input2 + ' = ';
             display.textContent = operation.result;
-            console.log("No Operator, YesPrevResult and NoInput", operation)
+            console.log("No Operator and Yes Previous Input 2", operation)
         }
+        else {
+            display.textContent = operation.input1;
+            operation.result = operation.input1;
+            equation.textContent = operation.input1 + ' = ';
+            console.log("No Operator, No Previous Input 2", operation)
+        }  
     }
 
+    //When there is an operator but no second input
     else if (!operation.input2) {
         operation.input2 = operation.input1;
         equation.textContent = operation.input1 + operation.operator + operation.input2 + ' = ';
         operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
         display.textContent = operation.result;
-        console.log("input1, YesOp, NoInput2", operation)
+        console.log("Yes Operator, No Input 2", operation)
     }
 
-    else {
-        operation.input2 = stripTrailingChars(operation.input2);
-        equation.textContent = operation.input1 + operation.operator + operation.input2 + ' = ';
-        operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
-        display.textContent = operation.result;
-        console.log("Else {Presumably in1 & op & in2", operation)
-    }
-
-    checkDisplayLength();
     console.log("equation after =", operation)
     saveHistory(operation);
+    equalsPressedLast = true;
+    checkDisplayLength();
     console.log('previous equation after =', previous)
 }
 
 function backspace() {
     console.log("before backspace", operation)
-    if (display.textContent.length > 1 && (operation.input1 || operation.input2)) {
-        display.textContent = display.textContent.slice(0, -1)
-        if (operation.input1 && !operation.operator) {
-            operation.input1 = display.textContent;
-        }
-        else if (operation.input2) {
-            operation.input2 = display.textContent;
-        }
-    }
-    else if (display.textContent.length === 1) {
-        if (operation.input2) {
-            display.textContent = '0';
-            operation.input2 = display.textContent;
-        }
-        else if (operation.input1 && !operation.operator) {
-            display.textContent = '0';
-            operation.input1 = null;
-        }
+    if (equalsPressedLast) equation.textContent = ''; 
+
+    else {
+        equalsPressedLast = false;
+        if (display.textContent.length > 1) display.textContent = display.textContent.slice(0, -1);
+        else if (display.textContent.length === 1) display.textContent = '0';
+
+        if (!operation.operator) operation.input1 = display.textContent;
+        else if (operation.input2) operation.input2 = display.textContent;
     }
     console.log("after backspace", operation)
 }
@@ -264,7 +236,7 @@ function clearPreviousOperation() {
     previous.input2 = null;
     previous.operator = null;
     previous.result = null;
-    prevPressed = null;
+    equalsPressedLast = false;
 }
 
 function clearAll() {
@@ -292,11 +264,11 @@ function stripTrailingChars(numberString) {
 }
 
 function displayTooLong() {
-    return display.textContent.length >= 15
+    return (display.offsetWidth + 12) >= display.parentElement.offsetWidth
 }
 
 function checkDisplayLength() {
-    if(displayTooLong() ) {
+    if(displayTooLong()) {
         display.textContent = Number.parseFloat(display.textContent).toExponential(10);
     }
     else {
@@ -310,7 +282,7 @@ function addEventListeners() {
     const buttons = document.querySelectorAll('button');
     buttons.forEach(btn => {
         btn.addEventListener('click', (e) => {
-            updateDisplay(e.target.textContent);
+            updateDisplay(btn);
         });
     });
 
@@ -321,24 +293,14 @@ function addEventListeners() {
 
 function handleKeypress(keyEvent) {
     let btn;
-    if (keyEvent.code === "NumpadEqual") {
-        btn = document.querySelector(`button[data-altNumpad=${keyEvent.code}]`)
-    }
-    else if (keyEvent.location === 3) {
-        btn = document.querySelector(`button[data-Numpad=${keyEvent.code}]`)
-    }
-    else if (keyEvent.shiftKey) {
-        btn = document.querySelector(`button[data-key=shift${keyEvent.code}]`)
-    }
-    else if (keyEvent.code === "Enter") {
-        btn = document.querySelector(`button[data-altKey=${keyEvent.code}]`)
-    }
-    else {
-        btn = document.querySelector(`button[data-key=${keyEvent.code}]`);
-    }
+    if (keyEvent.code === "NumpadEqual") btn = document.querySelector(`button[data-altNumpad=${keyEvent.code}]`);
+    else if (keyEvent.location === 3) btn = document.querySelector(`button[data-Numpad=${keyEvent.code}]`);
+    else if (keyEvent.shiftKey) btn = document.querySelector(`button[data-key=shift${keyEvent.code}]`)
+    else if (keyEvent.code === "Enter") btn = document.querySelector(`button[data-altKey=${keyEvent.code}]`)
+    else btn = document.querySelector(`button[data-key=${keyEvent.code}]`);
     if (btn) {
         keyEvent.preventDefault();
-        updateDisplay(btn.textContent)
+        updateDisplay(btn)
         console.log("pressing keyboard", operation)
     }
 }
