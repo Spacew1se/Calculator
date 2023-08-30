@@ -73,7 +73,7 @@ h6 {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background-color: rgb(73, 73, 73);
+    background: linear-gradient(153deg, rgb(49, 44, 44) 2%, rgba(77, 65, 65, 0.92) 23%, rgba(52, 46, 68, 0.88) 58%, rgba(16, 16, 22, 0.96) 100%);
 }
 
 .calculator {
@@ -121,16 +121,7 @@ h6 {
     gap: 2px;
 }
 
-.backspace {
-    flex-basis: 50%;
-    gap: 3px;
-}
-
-.clearEntry, .clear {
-    flex-basis: 25%;
-    min-height: 100%;
-}
-.btnrow > button {
+button {
     flex-basis: 25%;
     min-height: 100%;
 }
@@ -151,6 +142,6 @@ button:focus-visible {
     background-color: rgb(211, 211, 211);
 }
 
-.operator, .decimal, .clear, .equals, .backspace, .clearEntry {
+.operator, .decimal, .clear, .equals, .backspace, .clearEntry, .negate {
     background-color: rgb(230, 230, 230);
 }

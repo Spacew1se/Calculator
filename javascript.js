@@ -48,9 +48,6 @@ function divide(num1, num2) {
     if (num2 == 0) {
         const errormsg = "NOPE"
         equation.textContent = "Try again later."
-        operation.input1 = null;
-        operation.input2 = null;
-        operation.operator = null;
         errState = true;
         return errormsg;
     }
@@ -70,7 +67,6 @@ function operate(num1, num2, op) {
 }
 
 function updateDisplay(btn) {
-    if (errState) resetError();
     const btnPressed = btn.textContent;
     if (btn.classList.contains('digit')) handleDigit(btnPressed);
     else if (btn.classList.contains('operator')) handleOperator(btnPressed);
@@ -79,10 +75,11 @@ function updateDisplay(btn) {
     else if (btn.classList.contains('clearEntry')) clearEntry();
     else if (btn.classList.contains('clear')) clearAll();
     else if (btn.classList.contains('backspace')) backspace();
+    else if (btn.classList.contains('negate')) negate();
 }
 
 function handleDigit(btnPressed) {
-    
+    if (errState) resetError();
     if (display.textContent === '0' || (operation.operator && !operation.input2) || (!operation.operator && equalsPressedLast)) {
         display.textContent = btnPressed;
     }
@@ -98,98 +95,123 @@ function handleDigit(btnPressed) {
 }
 
 function handleDecimal() {
-    if ((operation.operator && !operation.input2) || (!operation.operator && equalsPressedLast)) {
-        display.textContent = '0.';
+    if (!errState) {
+        if ((operation.operator && !operation.input2) || (!operation.operator && equalsPressedLast)) {
+            display.textContent = '0.';
+        }
+        else if (!display.textContent.includes('.')) {
+            if (!displayTooLong()) display.textContent += '.';
+        }
+        if (!operation.operator) {
+            if (previous.result) equation.textContent = '';
+            operation.input1 = display.textContent;
+        }
+        else operation.input2 = display.textContent;
+        equalsPressedLast = false;
     }
-    else if (!display.textContent.includes('.')) {
-        if (!displayTooLong()) display.textContent += '.'; 
-    }
-    if(!operation.operator) {
-        if (previous.result) equation.textContent = '';
-        operation.input1 = display.textContent;
-    } 
-    else operation.input2 = display.textContent;
-    equalsPressedLast = false;
 }
 
 function handleOperator(btnPressed) {
-    if (operation.input1 !== '0') {
+    if(!errState) {
         display.textContent = stripTrailingChars(display.textContent);
+        if (operation.input2) {
+            operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
+            display.textContent = operation.result;
+            operation.input2 = null;
+        }
+        operation.input1 = display.textContent;
+        operation.operator = btnPressed;
+        equation.textContent = operation.input1 + operation.operator;
+        equalsPressedLast = false
+        checkDisplayLength();
     }
-    if (operation.input2) {
-        operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
-        display.textContent = operation.result;
-        operation.input2 = null;
-    }
-    operation.input1 = display.textContent;
-    operation.operator = btnPressed;
-    equation.textContent = operation.input1 + operation.operator;
-    equalsPressedLast = false
-    checkDisplayLength();
 }
-
+    
 function clearEntry() {
-    display.textContent = '0';
-    if (!operation.operator) {
-        clearDisplay()
-    }
-    else if (operation.operator || operation.input2) {
-        operation.input2 = '0';
+    if (errState) resetError();
+    else {
+        display.textContent = '0';
+        if (!operation.operator) {
+            clearDisplay()
+        }
+        else if (operation.operator || operation.input2) {
+            operation.input2 = '0';
+        }
     }
 }
 
 function handleEquals() {
+    if(errState) resetError();
 
-    //Any time we have two inputs and one operator
-    if (operation.operator && operation.input2) {
-        operation.input2 = stripTrailingChars(operation.input2);
-        operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
-        equation.textContent = operation.input1 + operation.operator + operation.input2 + ' = ';
-        display.textContent = operation.result;
-    }
-
-    //When equal is pressed when there is one input and no operator entered
-    //The one input can be the result of a previous operation, user entered, or default '0'
-    else if (!operation.operator) {
-        operation.input1 = stripTrailingChars(operation.input1);
-        if (previous.input2) {
-            operation.operator = previous.operator;
-            operation.input2 = previous.input2;
+    else {
+        //Any time we have two inputs and one operator
+        if (operation.operator && operation.input2) {
+            operation.input2 = stripTrailingChars(operation.input2);
             operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
-            equation.textContent = operation.input1 + operation.operator + operation.input2 + ' = ';
-            display.textContent = operation.result;
+            if (!errState) {
+                equation.textContent = operation.input1 + operation.operator + operation.input2 + ' = ';
+            }
         }
-        else {
-            display.textContent = operation.input1;
-            operation.result = operation.input1;
-            equation.textContent = operation.input1 + ' = ';
-        }  
-    }
 
-    //When there is an operator but no second input
-    else if (!operation.input2) {
-        operation.input2 = operation.input1;
-        equation.textContent = operation.input1 + operation.operator + operation.input2 + ' = ';
-        operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
+        //When equal is pressed when there is one input and no operator entered
+        //The one input can be the result of a previous operation, user entered, or default '0'
+        else if (!operation.operator) {
+            operation.input1 = stripTrailingChars(operation.input1);
+            if (previous.input2) {
+                operation.operator = previous.operator;
+                operation.input2 = previous.input2;
+                operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
+                equation.textContent = operation.input1 + operation.operator + operation.input2 + ' = ';
+            }
+            else {
+                operation.result = operation.input1;
+                equation.textContent = operation.input1 + ' = ';
+            }
+        }
+
+        //When there is an operator but no second input
+        else if (!operation.input2) {
+            operation.input2 = operation.input1;
+            equation.textContent = operation.input1 + operation.operator + operation.input2 + ' = ';
+            operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
+        }
         display.textContent = operation.result;
+        saveHistory(operation);
     }
-
-    saveHistory(operation);
+    
     equalsPressedLast = true;
     checkDisplayLength();
 }
 
-function backspace() {
-    if (equalsPressedLast) equation.textContent = ''; 
-
-    else {
-        equalsPressedLast = false;
-        if (display.textContent.length > 1) display.textContent = display.textContent.slice(0, -1);
-        else if (display.textContent.length === 1) display.textContent = '0';
-
-        if (!operation.operator) operation.input1 = display.textContent;
-        else if (operation.input2) operation.input2 = display.textContent;
+function negate() {
+    if(!errState) {
+        if (Number(display.textContent) !== 0) {
+            display.textContent = display.textContent.startsWith('-') ? display.textContent.slice(1) : '-' + display.textContent;
+        }
+        if (!operation.operator) {
+            if (!previous.input2 && previous.result) {
+                equation.textContent = display.textContent.startsWith('-') ? 'negate(' + display.textContent.slice(1) + ') = ' : display.textContent + ' = '
+            }
+            operation.input1 = display.textContent;
+        }
+        else operation.input2 = display.textContent;
     }
+}
+
+function backspace() {
+    if(errState) resetError();
+    else {
+        if (equalsPressedLast) equation.textContent = '';
+
+        else {
+            equalsPressedLast = false;
+            if (display.textContent.length > 1) display.textContent = display.textContent.slice(0, -1);
+            else if (display.textContent.length === 1) display.textContent = '0';
+
+            if (!operation.operator) operation.input1 = display.textContent;
+            else if (operation.input2) operation.input2 = display.textContent;
+        }
+    } 
 }
 
 function clearDisplay() {
@@ -218,9 +240,13 @@ function clearPreviousOperation() {
 }
 
 function clearAll() {
-    clearDisplay();
-    clearPreviousOperation();
+    if (errState) resetError();
+    else {
+        clearDisplay();
+        clearPreviousOperation();
+    }
 }
+    
 
 function saveHistory(op) {
     previous.input1 = op.input1;
