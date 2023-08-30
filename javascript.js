@@ -114,15 +114,16 @@ function handleDecimal() {
 function handleOperator(btnPressed) {
     if(!errState) {
         display.textContent = stripTrailingChars(display.textContent);
+        equalsPressedLast = false
         if (operation.input2) {
             operation.result = operate(Number(operation.input1), Number(operation.input2), operation.operator);
+            equalsPressedLast = true;
             display.textContent = operation.result;
             operation.input2 = null;
         }
         operation.input1 = display.textContent;
         operation.operator = btnPressed;
         equation.textContent = operation.input1 + operation.operator;
-        equalsPressedLast = false
         checkDisplayLength();
     }
 }
@@ -201,7 +202,9 @@ function negate() {
 function backspace() {
     if(errState) resetError();
     else {
-        if (equalsPressedLast) equation.textContent = '';
+        if (equalsPressedLast) {
+            if (!operation.result) equation.textContent = '';
+        } 
 
         else {
             equalsPressedLast = false;
