@@ -90,29 +90,32 @@ h1 > p{
     height: 30em;
     padding: 10px;
     gap: 4px;
-    box-shadow: 0px 0px 2px 2px rgba(17, 0, 114, 0.918),
-                0px 0px 4px 4px rgba(168, 0, 0, 0.87),
-                0px 0px 6px 6px rgb(248, 216, 31);
+    box-shadow: 0px 0px 2px 2px rgba(104, 93, 136, 0.88),
+                0px 0px 4px 4px rgba(161, 135, 135, 0.92),
+                0px 0px 6px 5px rgba(214, 78, 15, 0.863);
 }
 
 .displaycontainer {
     text-align: end;
     border: 1px solid rgb(17, 16, 16); 
-    min-height: 3em;
-    background-color: rgb(218, 218, 218);
+    min-height: 4em;
+    background: radial-gradient(rgb(236, 232, 221, 0.88) 88%, rgb(207, 204, 195));
     border-radius: 2px;
 }
 
 .eqndisplay {
-    vertical-align: middle;
     height: 1em;
     font-size: 1em;
+    font-family: 'Battambang', cursive;
+    font-weight: 400;
+    padding: 1px 5px;
 }
 
 .display {
-    vertical-align: middle;
-    font-size: 2.5rem;
-    padding: 4px;
+    font-size: 2.4rem;
+    padding: 0px 5px;
+    font-family: 'Battambang', cursive;
+    font-weight: 400;
 }
 
 .btnrow {
@@ -133,6 +136,8 @@ button {
     flex-basis: 25%;
     min-height: 100%;
     border-radius: 4px;
+    font-family: 'Battambang', cursive;
+    font-weight: 400;
 }
 
 button:focus-visible {
