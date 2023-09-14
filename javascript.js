@@ -186,7 +186,7 @@ function handleEquals() {
 
 function negate() {
     if(!errState) {
-        if (Number(display.textContent) !== 0) {
+        if (Number(display.textContent) !== 0 && !displayTooLong()) {
             display.textContent = display.textContent.startsWith('-') ? display.textContent.slice(1) : '-' + display.textContent;
         }
         if (!operation.operator) {
@@ -250,7 +250,6 @@ function clearAll() {
     }
 }
     
-
 function saveHistory(op) {
     previous.input1 = op.input1;
     previous.input2 = op.input2;
@@ -271,15 +270,15 @@ function stripTrailingChars(numberString) {
 }
 
 function displayTooLong() {
-    return (display.offsetWidth + 12) >= display.parentElement.offsetWidth
+    return (display.offsetWidth + 16) >= display.parentElement.offsetWidth
 }
 
 function checkDisplayLength() {
     if(displayTooLong()) {
-        display.textContent = Number.parseFloat(display.textContent).toExponential(10);
+        display.textContent = Number.parseFloat(display.textContent).toExponential(7);
     }
     else {
-        let rounded = Math.round((display.textContent) * 100000000) / 100000000;
+        let rounded = Math.round((display.textContent) * 10000000) / 10000000;
         rounded = "" + rounded;
         rounded = rounded.replace(/[.]0+$/g, '')
     }
